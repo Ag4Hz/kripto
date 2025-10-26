@@ -207,17 +207,21 @@ def encrypt_scytale(plaintext, diameter, binary=False):
                 k += 1
         return bytes(cipherfile)
     else:
-        # Remove whitespace and punctuation
-        plaintext = ''.join(plaintext.split())
-        # Pad the plaintext to fit the diameter
-        while len(plaintext) % diameter != 0:
-            plaintext += 'X'
-        # Create the ciphertext by reading the columns
-        ciphertext = ''
-        for i in range(diameter):
-            for j in range(len(plaintext) // diameter):
-                ciphertext += plaintext[j * diameter + i]
-        return ciphertext
+        n = len(plaintext)
+        if n == 0:
+            return ""
+        cols = diameter
+        rows = math.ceil(n / cols)
+        rem = n % cols
+        full_cols = rem if rem != 0 else cols
+
+        out = []
+        for c in range(cols):
+            col_height = rows if c < full_cols else rows - 1
+            for r in range(col_height):
+                idx = r * cols + c
+                out.append(plaintext[idx])
+        return ''.join(out)
 
 
 def decrypt_scytale(ciphertext, diameter, binary=False):
@@ -233,22 +237,44 @@ def decrypt_scytale(ciphertext, diameter, binary=False):
         full_cols = rem if rem != 0 else cols  # first full_cols columns have 'rows' items
 
         plainfile = bytearray(n)
-        k = 0
+        # compute starting offset of each column in ciphertext
+        offsets = [0] * cols
+        for c in range(1, cols):
+            prev_height = rows if (c - 1) < full_cols else rows - 1
+            offsets[c] = offsets[c - 1] + prev_height
+
         for c in range(cols):
             col_height = rows if c < full_cols else rows - 1
+            start = offsets[c]
             for r in range(col_height):
-                idx = r * cols + c  # row-major index in original
-                plainfile[idx] = ciphertext[k]
-                k += 1
+                cipher_idx = start + r
+                plain_idx = r * cols + c
+                plainfile[plain_idx] = ciphertext[cipher_idx]
         return bytes(plainfile)
     else:
-        # Create the plaintext by reading the rows
-        plaintext = ''
-        rows = len(ciphertext) // diameter
-        for i in range(rows):
-            for j in range(diameter):
-                plaintext += ciphertext[j * rows + i]
-        return plaintext
+        n = len(ciphertext)
+        if n == 0:
+            return ""
+        cols = diameter
+        rows = math.ceil(n / cols)
+        rem = n % cols
+        full_cols = rem if rem != 0 else cols
+
+        out = [''] * n
+        # compute starting offset of each column in ciphertext
+        offsets = [0] * cols
+        for c in range(1, cols):
+            prev_height = rows if (c - 1) < full_cols else rows - 1
+            offsets[c] = offsets[c - 1] + prev_height
+
+        for c in range(cols):
+            col_height = rows if c < full_cols else rows - 1
+            start = offsets[c]
+            for r in range(col_height):
+                cipher_idx = start + r
+                plain_idx = r * cols + c
+                out[plain_idx] = ciphertext[cipher_idx]
+        return ''.join(out)
     
 def encrypt_railfence(plaintext, rails, binary=False):
     """Encrypt plaintext or file using a Rail-fence cipher with a given number of rails.
@@ -272,20 +298,15 @@ def encrypt_railfence(plaintext, rails, binary=False):
             cipherfile.extend(row)
         return bytes(cipherfile)
     else:
-        # Remove whitespace and punctuation
-        plaintext = ''.join(plaintext.split())
-        # Create the rail fence
         fence = [[] for _ in range(rails)]
         rail = 0
         direction = 1
-        for char in plaintext:
-            fence[rail].append(char)
+        for ch in plaintext:
+            fence[rail].append(ch)
             rail += direction
             if rail == 0 or rail == rails - 1:
                 direction *= -1
-        # Read off the rails
-        ciphertext = ''.join(''.join(row) for row in fence)
-        return ciphertext
+        return ''.join(''.join(row) for row in fence)
     
 def decrypt_railfence(ciphertext, rails, binary=False):
     """Decrypt ciphertext or file using a Rail-fence cipher with a given number of rails.
