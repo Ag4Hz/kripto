@@ -7,6 +7,7 @@ pyvenv.cfg
 Scripts/
 Lib/
 *.png
+words
 
 # C extensions
 *.so

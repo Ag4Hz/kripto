@@ -12,6 +12,29 @@ Replace this with a description of the program.
 import math
 import utils
 from itertools import cycle, islice
+from tqdm import tqdm
+
+# Intelligent Codebreaker
+def codebreaker():
+    with open(".\\lab1\\words", "r") as f:
+        words = [line.strip().upper() for line in f.readlines()]
+        words = set(words)
+    possible_keys = words.copy()
+    ciphertext = open(".\\lab1\\not_a_secret_message.txt", "r").read()
+
+    total_words = len(ciphertext.split())
+    for key in tqdm(possible_keys):
+        plaintext = decrypt_vigenere(ciphertext, key)
+        plaintext = ''.join(char for char in plaintext if char.isalpha() or char.isspace() or char == "'")
+        
+        # Check if the decrypted text contains common English words from words file (at least 50%)
+        if len(possible_keys.intersection(set(plaintext.split()))) / total_words >= 0.5:
+            print(f"Possible key found: {key}")
+            print(f"Decrypted text: {plaintext}")
+            break
+
+    print("Codebreaker finished.")
+
 
 # Wrapper function for encrypting/decrypting binary files
 def binary():
@@ -98,6 +121,7 @@ def encrypt_caesar(plaintext, offset = 3, binary=False):
         letters = list(plaintext)
         for i, letter in enumerate(letters):
             if not letter.isalpha():
+                letters[i] = letter
                 continue
 
             if letter.isupper():
@@ -150,20 +174,23 @@ def encrypt_vigenere(plaintext, keyword, sign = 'positive', binary=False):
         key = list(islice(cycle(keyword), len(plaintext)))
         keyword = keyword.upper() # safety
         
+        shift = 0
         letters = list(plaintext)
         for i, letter in enumerate(letters):
             if not letter.isalpha():
+                shift += 1
+                letters[i] = letter
                 continue
 
             if letter.islower():
                 base = ord('a')
-                k = ord(key[i]) - base
+                k = ord(key[i - shift]) - base
                 offset = k if sign == 'positive' else -k
 
                 letters[i] = chr(base + (ord(letter) - base + offset) % alphabet_len)
             else:
                 base = ord('A')
-                k = ord(key[i]) - base
+                k = ord(key[i - shift]) - base
                 offset = k if sign == 'positive' else -k
                 
                 letters[i] = chr(base + (ord(letter) - base + offset) % alphabet_len)
