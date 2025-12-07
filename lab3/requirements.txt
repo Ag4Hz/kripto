@@ -1,0 +1,8 @@
+# Python dependencies for Lab 3 P2P Encrypted Messaging
+
+# Required for RSA key generation and encryption
+cryptography>=46.0.0
+
+# Required for pybind11 C++ bindings
+pybind11>=3.0.0
+pybind11[global]>=3.0.0
