@@ -133,55 +133,7 @@ class TestKeyServer(unittest.TestCase):
 
 
 class TestEncryption(unittest.TestCase):
-    def test_01_encrypt_decrypt_cbc(self):
-        key = secrets.token_bytes(16)
-        iv = secrets.token_bytes(16)
-        plaintext = b"Hello, this is a test message for CBC mode!"
-        
-        ciphertext = crypto_module.encrypt(
-            key=list(key),
-            iv=list(iv),
-            plaintext=list(plaintext),
-            mode="CBC",
-            padding="PKCS7"
-        )
-        
-        decrypted = crypto_module.decrypt(
-            key=list(key),
-            iv=list(iv),
-            ciphertext=ciphertext,
-            mode="CBC",
-            padding="PKCS7"
-        )
-        
-        self.assertEqual(bytes(decrypted), plaintext)
-        print("CBC mode encryption/decryption successful")
-    
-    def test_02_encrypt_decrypt_ecb(self):
-        key = secrets.token_bytes(16)
-        iv = secrets.token_bytes(16)
-        plaintext = b"Testing ECB mode with the fixed implementation!"
-        
-        ciphertext = crypto_module.encrypt(
-            key=list(key),
-            iv=list(iv),
-            plaintext=list(plaintext),
-            mode="ECB",
-            padding="ZERO"
-        )
-        
-        decrypted = crypto_module.decrypt(
-            key=list(key),
-            iv=list(iv),
-            ciphertext=ciphertext,
-            mode="ECB",
-            padding="ZERO"
-        )
-        
-        self.assertEqual(bytes(decrypted), plaintext)
-        print("ECB mode encryption/decryption successful")
-    
-    def test_04_all_modes(self):
+    def test_01_all_modes(self):
         """Test all cipher modes"""
         modes = ["ECB", "CBC", "CFB", "OFB", "CTR"]
         key = secrets.token_bytes(16)
